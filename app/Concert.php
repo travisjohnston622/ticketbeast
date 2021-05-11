@@ -2,19 +2,25 @@
 
 namespace App;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Concert extends Model
 {
     protected $guarded = [];
-    protected $dates = ['date'];
+    protected $date = ['date'];
 
-    public function getFormattedDateAttribute()
+    public function scopePublished($query)
+    {
+        return $query->whereNotNull('published_at');
+    }
+
+    public function getFormattedDate()
     {
         return $this->date->format('F j, Y');
     }
 
-    public function getFormattedStartTimeAttribute()
+    public function getFormattedStartTime()
     {
         return $this->date->format('g:ia');
     }
