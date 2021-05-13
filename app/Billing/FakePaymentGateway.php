@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Billing;
+use App\Billing\PaymentGateway;
 
 class FakePaymentGateway implements PaymentGateway
 {
