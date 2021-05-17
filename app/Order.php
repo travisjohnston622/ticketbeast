@@ -8,7 +8,7 @@ class Order extends Model
 {
     protected $guarded = [];
 
-    public static function forTickets($tickets, $email, $amount)
+    public static function forTickets($tickets, string $email, int $amount): Order
     {
         $order = self::create([
             'email' => $email,
@@ -46,7 +46,7 @@ class Order extends Model
         $this->delete();
     }
 
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'email' => $this->email,
