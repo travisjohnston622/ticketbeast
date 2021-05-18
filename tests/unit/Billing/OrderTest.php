@@ -2,6 +2,8 @@
 
 use App\Concert;
 use App\Order;
+use App\Reservation;
+use App\Ticket;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -38,18 +40,5 @@ class OrderTest extends TestCase
             'ticket_quantity' => 5,
             'amount' => 6000,
         ], $result);
-    }
-
-    /** @test */
-    function tickets_are_released_when_an_order_is_canceled()
-    {
-        $concert = factory(Concert::class)->create()->addTickets(10);
-        $order = Order::forTickets($concert->findTickets(5), 'travis@example.com', 1200);
-        $this->assertEquals(5, $concert->ticketsRemaining());
-
-        $order->cancel();
-
-        $this->assertEquals(10, $concert->ticketsRemaining());
-        $this->assertNull(Order::find($order->id));
     }
 }
