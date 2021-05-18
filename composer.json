@@ -9,9 +9,10 @@
     "type": "project",
     "require": {
         "php": ">=7.2.0",
-        "laravel/framework": "^5.8.0",
         "kylekatarnls/laravel-carbon-2": "^1.0.0",
-        "nesbot/carbon": "2.0.0-beta.2 as 1.25.0"
+        "laravel/framework": "^5.8.0",
+        "nesbot/carbon": "2.0.0-beta.2 as 1.25.0",
+        "stripe/stripe-php": "^7.78"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",
