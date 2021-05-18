@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Model;
 class Concert extends Model
 {
     protected $guarded = [];
-    protected $date = ['date'];
 
     public function scopePublished($query)
     {
@@ -19,14 +18,15 @@ class Concert extends Model
 
     public function getFormattedDate()
     {
-        return $this->date->format('F j, Y');
+        return Carbon::parse($this->date)->format('F j, Y');
     }
 
     public function getFormattedStartTime()
     {
-        return $this->date->format('g:ia');
+        return Carbon::parse($this->date)->format('g:ia');
     }
-    public function getTicketPriceInDollarsAttribute()
+
+    public function getTicketPriceInDollars()
     {
         return number_format($this->ticket_price / 100, 2);
     }
@@ -55,7 +55,16 @@ class Concert extends Model
     {
         $tickets = $this->findTickets($ticketQuantity);
 
-        return $this->createOrder($email, $tickets);
+        return $this->createOrder($tickets, $email);
+    }
+
+    public function reserveTickets($quantity, $email)
+    {
+        $tickets = $this->findTickets($quantity)->each(function ($ticket) {
+            $ticket->reserve();
+        });
+
+        return new Reservation($tickets, $email);
     }
 
     public function findTickets($quantity)
@@ -69,9 +78,9 @@ class Concert extends Model
         return $tickets;
     }
 
-    public function createOrder($email, $tickets)
+    public function createOrder($tickets, string $email): Order
     {
-        return Order::forTickets($email, $tickets);
+        return Order::forTickets($tickets, $email, $tickets->sum('price'));
     }
 
     public function addTickets($quantity)
