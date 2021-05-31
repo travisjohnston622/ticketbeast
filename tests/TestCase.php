@@ -16,6 +16,13 @@ abstract class TestCase extends Illuminate\Foundation\Testing\TestCase
      *
      * @return \Illuminate\Foundation\Application
      */
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Mockery::getConfiguration()->allowMockingNonExistentMethods(false);
+    }
+
     public function createApplication()
     {
         $app = require __DIR__.'/../bootstrap/app.php';
