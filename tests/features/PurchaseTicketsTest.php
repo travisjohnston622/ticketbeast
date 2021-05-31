@@ -3,6 +3,9 @@
 use App\Concert;
 use App\Billing\FakePaymentGateway;
 use App\Billing\PaymentGateway;
+use App\Facades\OrderConfirmationNumber;
+use App\Facades\TicketCode;
+use App\OrderConfirmationNumberGenerator;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -18,6 +21,9 @@ class PurchaseTicketsTest extends TestCase
         $paymentGateway = new FakePaymentGateway;
         $this->app->instance(PaymentGateway::class, $paymentGateway);
 
+        OrderConfirmationNumber::shouldReceive('generate')->andReturn('ORDERCONFIRMATION1234');
+        TicketCode::shouldReceive('generateFor')->andReturn('TICKETCODE1', 'TICKETCODE2', 'TICKETCODE3');
+
         $concert = factory(Concert::class)->states('published')->create(['ticket_price' => 3250])->addTickets(3);
 
         $response = $this->json('POST', "/concerts/{$concert->id}/orders", [
@@ -28,10 +34,16 @@ class PurchaseTicketsTest extends TestCase
 
         $response->assertStatus(201);
         $response->assertJson([
+            'confirmation_number' => 'ORDERCONFIRMATION1234',
             'email' => 'travis@example.com',
-            'ticket_quantity' => 3,
             'amount' => 9750,
+            'tickets' => [
+                ['code' => 'TICKETCODE1'],
+                ['code' => 'TICKETCODE2'],
+                ['code' => 'TICKETCODE3'],
+            ]
         ]);
+
         $this->assertEquals(9750, $paymentGateway->totalCharges());
         $this->assertTrue($concert->hasOrderFor('travis@example.com'));
         $this->assertEquals(3, $concert->ordersFor('travis@example.com')->first()->ticketQuantity());
