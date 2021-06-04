@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Unit;
+
 use App\Concert;
 use App\Exceptions\NotEnoughTicketsException;
 use App\Order;
@@ -8,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Tests\TestCase;
 
 class ConcertTest extends TestCase
 {
@@ -55,6 +58,17 @@ class ConcertTest extends TestCase
         $this->assertTrue($publishedConcerts->contains($publishedConcertA));
         $this->assertTrue($publishedConcerts->contains($publishedConcertB));
         $this->assertFalse($publishedConcerts->contains($unpublishedConcert));
+    }
+
+    /** @test */
+    function concerts_can_be_published()
+    {
+        $concert = factory(Concert::class)->create(['published_at' => null]);
+        $this->assertFalse($concert->isPublished());
+
+        $concert->publish();
+
+        $this->assertTrue($concert->isPublished());
     }
 
     /** @test */
