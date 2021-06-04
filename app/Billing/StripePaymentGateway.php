@@ -17,18 +17,24 @@ class StripePaymentGateway implements PaymentGateway
         $this->apiKey = $apiKey;
     }
 
-    public function charge($amount, $token)
+    /**
+     * @param int $amount
+     * @param $token
+     * @return Charge
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function charge(int $amount, $token)
     {
         try {
-        $stripeCharge = \Stripe\Charge::create([
-            'amount' => $amount,
-            'source' => $token,
-            'currency' => 'usd',
-        ], ['api_key' => $this->apiKey]);
-        return new Charge([
-            'amount' => $stripeCharge['amount'],
-            'card_last_four' => $stripeCharge['source']['last4'],
-        ]);
+            $stripeCharge = \Stripe\Charge::create([
+                'amount' => $amount,
+                'source' => $token,
+                'currency' => 'usd',
+            ], ['api_key' => $this->apiKey]);
+            return new Charge([
+                'amount' => $stripeCharge['amount'],
+                'card_last_four' => $stripeCharge['source']['last4'],
+            ]);
         } catch (InvalidRequestException $e) {
             throw new PaymentFailedException;
         }
