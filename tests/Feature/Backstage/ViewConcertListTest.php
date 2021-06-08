@@ -4,6 +4,7 @@ namespace Tests\Feature\Backstage;
 
 use App\Concert;
 use App\User;
+use ConcertFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\TestResponse;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
@@ -27,6 +28,19 @@ class ViewConcertListTest extends TestCase
 
         Collection::macro('assertContains', function ($value) {
             Assert::assertTrue($this->contains($value), "Failed asserting that the collection contained the specified value");
+        });
+
+        Collection::macro('assertNotContains', function ($value) {
+            Assert::assertFalse($this->contains($value), "Failed asserting that the collection did not contain the specified value");
+        });
+
+        Collection::macro('assertEquals', function ($items) {
+            Assert::assertEquals(count($this), count($items));
+
+            $this->zip($items)->each(function ($pair) {
+                list($a, $b) = $pair;
+                Assert::assertTrue($a->is($b));
+            });
         });
     }
 
@@ -54,10 +68,39 @@ class ViewConcertListTest extends TestCase
         $response = $this->actingAs($user)->get('/backstage/concerts');
 
         $response->assertStatus(200);
-        $response->data('concerts')->assertContains($concertC);
-        $this->assertTrue($response->data('concerts')->contains($concertA));
-        $this->assertTrue($response->data('concerts')->contains($concertB));
-        $this->assertTrue($response->data('concerts')->contains($concertD));
-        $this->assertFalse($response->data('concerts')->contains($concertC));
+        $response->data('concerts')->assertContains($concertA);
+        $response->data('concerts')->assertContains($concertB);
+        $response->data('concerts')->assertContains($concertD);
+        $response->data('concerts')->assertNotContains($concertC);
+    }
+
+    /** @test */
+    function promoters_can_view_a_list_of_their_own_concerts()
+    {
+        $this->withoutExceptionHandling();
+
+        $user = factory(User::class)->create();
+        $otherUser = factory(User::class)->create();
+        $publishedConcertA = ConcertFactory::createPublished(['user_id' => $user->id]);
+        $publishedConcertB = ConcertFactory::createPublished(['user_id' => $otherUser->id]);
+        $publishedConcertC = ConcertFactory::createPublished(['user_id' => $user->id]);
+
+        $unpublishedConcertA = ConcertFactory::createUnpublished(['user_id' => $user->id]);
+        $unpublishedConcertB = ConcertFactory::createUnpublished(['user_id' => $otherUser->id]);
+        $unpublishedConcertC = ConcertFactory::createUnpublished(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)->get('/backstage/concerts');
+
+        $response->assertStatus(200);
+
+        $response->data('publishedConcerts')->assertEquals([
+            $publishedConcertA,
+            $publishedConcertC,
+        ]);
+
+        $response->data('unpublishedConcerts')->assertEquals([
+            $unpublishedConcertA,
+            $unpublishedConcertC,
+        ]);
     }
 }
